@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.link {
+  stroke: #000;
+  stroke-width: 0.5px;
+}
+
+.node {
+  fill: #000;
+  stroke: #fff;
+  stroke-width: 0.5px;
+}
+
+.node.a { fill: #1f77b4; }
+.node.b { fill: #ff7f0e; }
+.node.c { fill: #2ca02c; }
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var width = 1024,
+    height = 768;
+
+var color = d3.scale.category10();
+
+var nodes = [],
+    links = [];
+
+var a = {id: "a", color: "a", score: 40}, b = {id: "b", color: "b", score: 40}, c = {id: "c", color : "c"};
+
+var force = d3.layout.force()
+    .nodes(nodes)
+    .links(links)
+    .linkDistance(20)
+    .charge(-400)
+    .size([width, height])
+    .on("tick", tick);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var node = svg.selectAll(".node"),
+    link = svg.selectAll(".link");
+
+// 1. Add three nodes and three links.
+setTimeout(function() {
+  var number = Math.floor(Math.random()*2);
+  nodes.push(a, b);
+  links.push({source: a, target: b, score: 10});
+  start();
+}, 0);
+
+setInterval(function(){
+  var d, link;
+  var nodenumber = Math.floor(Math.random()*2);
+  var sentimentscore = (Math.floor(Math.random()*10)+1)*2;
+  var number = Math.random();
+  
+  if(nodenumber === 0){
+    var badScore = nodes[nodenumber].score;
+    nodes[nodenumber].score = badScore + sentimentscore/100;
+
+
+    d = {id: number, color : "a", score: sentimentscore};
+    link = {source: nodes[nodenumber], target: d, score: sentimentscore, color: "a"};
+  }
+  if(nodenumber === 1){
+
+    var goodScore = nodes[nodenumber].score;
+    nodes[nodenumber].score = goodScore + sentimentscore/100;
+
+    d = {id: number, color : "b", score: sentimentscore};
+    link = {source: nodes[nodenumber], target: d, score: sentimentscore, color: "b"};
+  }
+
+
+
+  nodes.push(d);
+  links.push(link);
+
+
+  if(nodes.length > 50){
+
+      nodes.remove(4); 
+      links.remove(3);
+      //links.shift(); 
+      //links.pop(); 
+  }
+
+   start();
+}, 200); 
+
+// Array Remove - By John Resig (MIT Licensed)
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
+
+
+function start() {
+  link = link.data(force.links(), function(d) { return d.source.id + "-" + d.target.id; });
+  link.enter().insert("line", ".node").attr("class", "link");
+  link.exit().remove();
+
+  node = node.data(force.nodes(), function(d) { return d.id;});
+  node.enter().append("circle").attr("class", function(d) { return "node " + d.color; });
+  node.exit().remove();
+
+  force.start();
+}
+
+function tick() {
+  node.attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; })
+      .attr("r",  function(d) { return d.score; });
+
+  link.style("stroke-width", function(d) { return d.score/3; })
+      .style("stroke","red")
+      .attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+}
+
+</script>
